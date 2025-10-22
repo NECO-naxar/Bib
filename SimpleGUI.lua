@@ -62,10 +62,17 @@ function GUI:AddSection(name)
     end)
 
     table.insert(self.Sections, section)
+
+    -- Если это первый раздел, сразу открываем его
+    if #self.Sections == 1 then
+        self.CurrentSection = section
+        self:RefreshContent()
+    end
+
     return section
 end
 
--- Обновление отображения кнопок текущего раздела
+-- Обновление контента
 function GUI:RefreshContent()
     -- Убираем все старые элементы
     for _, child in ipairs(self.ContentArea:GetChildren()) do
@@ -82,6 +89,7 @@ function GUI:RefreshContent()
         btn.Position = UDim2.new(0, 10, 0, 10 + (i-1)*60)
     end
 end
+
 
 -- Добавление обычной кнопки
 function GUI:AddButton(section, name, callback)
