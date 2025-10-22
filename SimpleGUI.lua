@@ -1,152 +1,185 @@
-local SimpleGUI = {}
+--// Services
+local UserInputService = game:GetService("UserInputService")
 
-local function make_shadow(parent, depth)
-    local shadow = Instance.new("ImageLabel")
-    shadow.BackgroundTransparency = 1
-    shadow.Image = "rbxassetid://4483369609"  -- Roblox стандартная тень
-    shadow.ImageTransparency = 0.65
-    shadow.ScaleType = Enum.ScaleType.Slice
-    shadow.SliceCenter = Rect.new(10,10,118,118)
-    shadow.Size = UDim2.new(1, depth*2, 1, depth*2)
-    shadow.Position = UDim2.new(0, -depth, 0, -depth)
-    shadow.ZIndex = 0
-    shadow.Parent = parent
-    return shadow
-end
+--// Library
+local Library = {}
+Library.__index = Library
 
-function SimpleGUI:CreateWindow(title, sizeX, sizeY)
-    -- screen gui
+-- Theme configurations
+local Themes = {
+    Light = {
+        --// Frames:
+        Primary = Color3.fromRGB(232, 232, 232),
+        Secondary = Color3.fromRGB(255, 255, 255),
+        Component = Color3.fromRGB(245, 245, 245),
+        Interactables = Color3.fromRGB(235, 235, 235),
+
+        --// Text:
+        Tab = Color3.fromRGB(50, 50, 50),
+        Title = Color3.fromRGB(0, 0, 0),
+        Description = Color3.fromRGB(100, 100, 100),
+
+        --// Outlines:
+        Shadow = Color3.fromRGB(255, 255, 255),
+        Outline = Color3.fromRGB(210, 210, 210),
+
+        --// Image:
+        Icon = Color3.fromRGB(100, 100, 100),
+    },
+    
+    Dark = {
+        --// Frames:
+        Primary = Color3.fromRGB(30, 30, 30),
+        Secondary = Color3.fromRGB(35, 35, 35),
+        Component = Color3.fromRGB(40, 40, 40),
+        Interactables = Color3.fromRGB(45, 45, 45),
+
+        --// Text:
+        Tab = Color3.fromRGB(200, 200, 200),
+        Title = Color3.fromRGB(240,240,240),
+        Description = Color3.fromRGB(200,200,200),
+
+        --// Outlines:
+        Shadow = Color3.fromRGB(0, 0, 0),
+        Outline = Color3.fromRGB(40, 40, 40),
+
+        --// Image:
+        Icon = Color3.fromRGB(220, 220, 220),
+    },
+    
+    Void = {
+        --// Frames:
+        Primary = Color3.fromRGB(15, 15, 15),
+        Secondary = Color3.fromRGB(20, 20, 20),
+        Component = Color3.fromRGB(25, 25, 25),
+        Interactables = Color3.fromRGB(30, 30, 30),
+
+        --// Text:
+        Tab = Color3.fromRGB(200, 200, 200),
+        Title = Color3.fromRGB(240,240,240),
+        Description = Color3.fromRGB(200,200,200),
+
+        --// Outlines:
+        Shadow = Color3.fromRGB(0, 0, 0),
+        Outline = Color3.fromRGB(40, 40, 40),
+
+        --// Image:
+        Icon = Color3.fromRGB(220, 220, 220),
+    },
+}
+
+-- Create a new window
+function Library:CreateWindow(config)
+    local window = {}
+    setmetatable(window, self)
+    
+    -- Default settings
+    window.Title = config.Title or "Window"
+    window.Theme = config.Theme or "Dark"
+    window.Size = config.Size or UDim2.fromOffset(570, 370)
+    window.Transparency = config.Transparency or 0.2
+    window.Blurring = config.Blurring or false
+    window.MinimizeKeybind = config.MinimizeKeybind or Enum.KeyCode.LeftAlt
+    
+    -- Create the main GUI
     local gui = Instance.new("ScreenGui")
-    gui.Name = "CustomSimpleGUI"
-    gui.Parent = game.CoreGui
-
-    -- Main window (frame)
+    gui.Name = "LibraryGUI"
+    gui.Parent = game:GetService("CoreGui")
+    
+    -- Main frame
     local frame = Instance.new("Frame")
-    frame.Size = UDim2.new(0, sizeX or 340, 0, sizeY or 440)
-    frame.Position = UDim2.new(0.5, -((sizeX or 340) / 2), 0.5, -((sizeY or 440) / 2))
-    frame.AnchorPoint = Vector2.new(0,0)
-    frame.BackgroundColor3 = Color3.fromRGB(26, 27, 32)
+    frame.Size = window.Size
+    frame.Position = UDim2.new(0.5, -window.Size.X.Offset/2, 0.5, -window.Size.Y.Offset/2)
+    frame.BackgroundColor3 = Themes[window.Theme].Primary
     frame.BorderSizePixel = 0
     frame.ZIndex = 2
     frame.Parent = gui
-
+    
     local corner = Instance.new("UICorner", frame)
-    corner.CornerRadius = UDim.new(0, 16)
-
-    make_shadow(frame, 12)
-
-    -- Header (title bar)
-    local header = Instance.new("Frame")
-    header.Parent = frame
-    header.Size = UDim2.new(1, 0, 0, 48)
-    header.BackgroundColor3 = Color3.fromRGB(38, 41, 54)
-    header.BorderSizePixel = 0
-    header.ZIndex = 3
-
-    local header_corner = Instance.new("UICorner", header)
-    header_corner.CornerRadius = UDim.new(0, 16)
-
-    local lbl = Instance.new("TextLabel", header)
-    lbl.Text = title or "Window"
-    lbl.Size = UDim2.new(1, 0, 1, 0)
-    lbl.BackgroundTransparency = 1
-    lbl.TextColor3 = Color3.fromRGB(227, 229, 240)
-    lbl.Font = Enum.Font.GothamSemibold
-    lbl.TextSize = 21
-    lbl.TextXAlignment = Enum.TextXAlignment.Center
-    lbl.ZIndex = 4
-
-    -- Drag logic за хедер
-    local UserInputService = game:GetService("UserInputService")
-    local dragging = false
-    local dragInput, dragStart, startPos
-    header.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = frame.Position
-            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+    corner.CornerRadius = UDim.new(0, 8)
+    
+    -- Store references
+    window.GUI = gui
+    window.Frame = frame
+    window.Tabs = {}
+    window.Settings = {}
+    
+    -- Initialize window methods
+    function window:SetTheme(theme)
+        if type(theme) == "string" then
+            theme = Themes[theme] or Themes.Dark
         end
-    end)
-    header.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if input == dragInput and dragging then
-            local delta = input.Position - dragStart
-            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        
+        -- Update window colors
+        self.Frame.BackgroundColor3 = theme.Primary
+        
+        -- Store the current theme
+        self.Theme = theme
+        
+        -- Update all UI elements with new theme
+        -- (Implementation depends on your UI structure)
+    end
+    
+    function window:SetSetting(key, value)
+        self.Settings[key] = value
+    end
+    
+    function window:AddTabSection(config)
+        -- Implementation for tab sections
+    end
+    
+    function window:AddTab(config)
+        local tab = {
+            Title = config.Title,
+            Section = config.Section,
+            Icon = config.Icon,
+            Elements = {}
+        }
+        
+        -- Store the tab
+        if not self.Tabs[config.Section] then
+            self.Tabs[config.Section] = {}
         end
-    end)
-
-    -- Кнопочная зона (scrollable)
-    local buttonArea = Instance.new("ScrollingFrame", frame)
-    buttonArea.Name = "ButtonArea"
-    buttonArea.Position = UDim2.new(0, 0, 0, 48)
-    buttonArea.Size = UDim2.new(1, 0, 1, -48)
-    buttonArea.BackgroundTransparency = 1
-    buttonArea.BorderSizePixel = 0
-    buttonArea.ZIndex = 3
-    buttonArea.ScrollBarThickness = 6
-    buttonArea.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
-    buttonArea.ScrollingDirection = Enum.ScrollingDirection.Y
-
-    local layout = Instance.new("UIListLayout", buttonArea)
-    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
-    layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0,14)
-
-    local function updateCanvas()
-        buttonArea.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+        table.insert(self.Tabs[config.Section], tab)
+        
+        -- Add tab methods
+        function tab:AddButton(config)
+            local button = {
+                Title = config.Title,
+                Description = config.Description or "",
+                Callback = config.Callback or function() end
+            }
+            
+            -- Store the button
+            table.insert(self.Elements, {
+                Type = "Button",
+                Data = button
+            })
+            
+            return button
+        end
+        
+        -- Add other element types (Slider, Toggle, Input, Dropdown, Keybind) similarly
+        
+        return tab
     end
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
-    updateCanvas()
-
-    local uipadding = Instance.new("UIPadding", buttonArea)
-    uipadding.PaddingTop = UDim.new(0, 10)
-    uipadding.PaddingBottom = UDim.new(0, 10)
-
-    frame.Buttons = {}
-
-    function frame:AddButton(text, callback)
-        local btn = Instance.new("TextButton", buttonArea)
-        btn.Size = UDim2.new(0.92, 0, 0, 44)
-        btn.BackgroundColor3 = Color3.fromRGB(44, 52, 70)
-        btn.AutoButtonColor = false
-        btn.Text = text
-        btn.Font = Enum.Font.GothamSemibold
-        btn.TextColor3 = Color3.fromRGB(230,235,243)
-        btn.TextSize = 19
-        btn.ZIndex = 4
-        btn.LayoutOrder = #frame.Buttons + 1
-
-        local uic = Instance.new("UICorner", btn)
-        uic.CornerRadius = UDim.new(0, 12)
-        local uistroke = Instance.new("UIStroke", btn)
-        uistroke.Color = Color3.fromRGB(37,42,65)
-        uistroke.Thickness = 1.1
-        uistroke.Transparency = 0.48
-
-        local shadow = make_shadow(btn, 4)
-        shadow.ZIndex = btn.ZIndex - 1
-
-        -- Hover эффект
-        btn.MouseEnter:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(54, 58, 92)
-            btn.TextColor3 = Color3.fromRGB(245, 245, 255)
-        end)
-        btn.MouseLeave:Connect(function()
-            btn.BackgroundColor3 = Color3.fromRGB(44, 52, 70)
-            btn.TextColor3 = Color3.fromRGB(230,235,243)
-        end)
-
-        btn.MouseButton1Click:Connect(function()
-            if callback then callback() end
-        end)
-        table.insert(frame.Buttons, btn)
-        updateCanvas()
+    
+    function window:Notify(config)
+        -- Implementation for notifications
+        print("Notification:", config.Title, "-", config.Description)
     end
-
-    return frame
+    
+    -- Set the initial theme
+    window:SetTheme(window.Theme)
+    
+    return window
 end
 
-return SimpleGUI
+-- Create a global instance
+function CreateWindow(config)
+    return Library:CreateWindow(config)
+end
+
+return {
+    CreateWindow = CreateWindow
+}
