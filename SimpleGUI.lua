@@ -1,10 +1,10 @@
--- Library.lua
-local Library = {}
-Library.__index = Library
+-- SimpleGUI.lua
+local GUI = {}
+GUI.__index = GUI
 
 -- Создание меню
-function Library:CreateMenu(title)
-    local self = setmetatable({}, Library)
+function GUI:CreateMenu(title)
+    local self = setmetatable({}, GUI)
     self.Menu = Instance.new("ScreenGui")
     self.Menu.Name = title
     self.Menu.ResetOnSpawn = false
@@ -14,8 +14,8 @@ function Library:CreateMenu(title)
     return self
 end
 
--- Создание раздела
-function Library:AddSection(name)
+-- Добавление раздела
+function GUI:AddSection(name)
     local sectionFrame = Instance.new("Frame")
     sectionFrame.Size = UDim2.new(0, 300, 0, 400)
     sectionFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
@@ -38,8 +38,8 @@ function Library:AddSection(name)
     return section
 end
 
--- Добавление обычной кнопки
-function Library:AddButton(section, name, callback)
+-- Обычная кнопка
+function GUI:AddButton(section, name, callback)
     local button = Instance.new("TextButton")
     button.Size = UDim2.new(0, 280, 0, 50)
     button.Position = UDim2.new(0,10,0,50 + (#section.Buttons * 60))
@@ -50,8 +50,8 @@ function Library:AddButton(section, name, callback)
     table.insert(section.Buttons, button)
 end
 
--- Добавление кнопки с вводом текста
-function Library:AddTextButton(section, name, callback)
+-- Кнопка с текстом
+function GUI:AddTextButton(section, name, callback)
     local textBox = Instance.new("TextBox")
     textBox.Size = UDim2.new(0, 200, 0, 50)
     textBox.Position = UDim2.new(0,10,0,50 + (#section.Buttons * 60))
@@ -72,8 +72,8 @@ function Library:AddTextButton(section, name, callback)
     table.insert(section.Buttons, button)
 end
 
--- Добавление ползунка
-function Library:AddSlider(section, name, min, max, default, callback)
+-- Ползунок
+function GUI:AddSlider(section, name, min, max, default, callback)
     local sliderLabel = Instance.new("TextLabel")
     sliderLabel.Size = UDim2.new(0, 280, 0, 30)
     sliderLabel.Position = UDim2.new(0,10,0,50 + (#section.Buttons * 60))
@@ -100,4 +100,5 @@ function Library:AddSlider(section, name, min, max, default, callback)
     table.insert(section.Buttons, slider)
 end
 
-return Library
+return GUI
+
