@@ -79,27 +79,17 @@ function SimpleGUI:CreateWindow(title, sizeX, sizeY)
     end)
 
     -- Кнопочная зона (scrollable)
-    local buttonArea = Instance.new("ScrollingFrame", frame)
+    local buttonArea = Instance.new("Frame", frame)
     buttonArea.Name = "ButtonArea"
     buttonArea.Position = UDim2.new(0, 0, 0, 54)
     buttonArea.Size = UDim2.new(1, 0, 1, -54)
     buttonArea.BackgroundTransparency = 1
-    buttonArea.BorderSizePixel = 0
-    buttonArea.ScrollBarThickness = 4
     buttonArea.ZIndex = 3
-    buttonArea.CanvasSize = UDim2.new(0, 0, 0, 0)
-    buttonArea.ScrollingDirection = Enum.ScrollingDirection.Y
-    buttonArea.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
 
     local layout = Instance.new("UIListLayout", buttonArea)
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
-    layout.Padding = UDim.new(0, 14)
-    
-    -- Update canvas size when layout changes
-    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
-        buttonArea.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 14)
-    end)
+    layout.Padding = UDim.new(0,14)
 
     frame.Buttons = {}
 
