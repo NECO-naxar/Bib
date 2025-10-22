@@ -1,55 +1,134 @@
 local SimpleGUI = {}
 
+local function make_shadow(parent, depth)
+    local shadow = Instance.new("ImageLabel")
+    shadow.BackgroundTransparency = 1
+    shadow.Image = "rbxassetid://4483369609"  -- Roblox стандартная тень
+    shadow.ImageTransparency = 0.65
+    shadow.ScaleType = Enum.ScaleType.Slice
+    shadow.SliceCenter = Rect.new(10,10,118,118)
+    shadow.Size = UDim2.new(1, depth*2, 1, depth*2)
+    shadow.Position = UDim2.new(0, -depth, 0, -depth)
+    shadow.ZIndex = 0
+    shadow.Parent = parent
+    return shadow
+end
+
 function SimpleGUI:CreateWindow(title, sizeX, sizeY)
-    sizeX = sizeX or 300
-    sizeY = sizeY or 400
+    -- screen gui
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "CustomSimpleGUI"
+    gui.Parent = game.CoreGui
 
-    local gui = Instance.new("ScreenGui", game.CoreGui)
-    local frame = Instance.new("Frame", gui)
-    frame.Size = UDim2.new(0, sizeX, 0, sizeY)
-    frame.Position = UDim2.new(0.5, -sizeX/2, 0.5, -sizeY/2)
-    frame.BackgroundColor3 = Color3.fromRGB(30,30,30)
-    frame.Active = true
-    frame.Draggable = true
+    -- Main window (frame)
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, sizeX or 340, 0, sizeY or 440)
+    frame.Position = UDim2.new(0.5, -((sizeX or 340) / 2), 0.47, -((sizeY or 440) / 2))
+    frame.AnchorPoint = Vector2.new(0,0)
+    frame.BackgroundColor3 = Color3.fromRGB(26, 27, 32)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 2
+    frame.Parent = gui
 
-    -- Заголовок
-    local label = Instance.new("TextLabel", frame)
-    label.Size = UDim2.new(1, 0, 0, 30)
-    label.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    label.TextColor3 = Color3.fromRGB(255,255,255)
-    label.Text = title or "Window"
-    label.Font = Enum.Font.GothamBold
-    label.TextSize = 20
+    local corner = Instance.new("UICorner", frame)
+    corner.CornerRadius = UDim.new(0, 16)
+
+    make_shadow(frame, 12)
+
+    -- Header (title bar)
+    local header = Instance.new("Frame")
+    header.Parent = frame
+    header.Size = UDim2.new(1, 0, 0, 48)
+    header.BackgroundColor3 = Color3.fromRGB(38, 41, 54)
+    header.BorderSizePixel = 0
+    header.ZIndex = 3
+
+    local header_corner = Instance.new("UICorner", header)
+    header_corner.CornerRadius = UDim.new(0, 16)
+
+    local lbl = Instance.new("TextLabel", header)
+    lbl.Text = title or "Window"
+    lbl.Size = UDim2.new(1, 0, 1, 0)
+    lbl.BackgroundTransparency = 1
+    lbl.TextColor3 = Color3.fromRGB(227, 229, 240)
+    lbl.Font = Enum.Font.GothamSemibold
+    lbl.TextSize = 21
+    lbl.TextXAlignment = Enum.TextXAlignment.Center
+    lbl.ZIndex = 4
+
+    -- Drag logic за хедер
+    local UserInputService = game:GetService("UserInputService")
+    local dragging = false
+    local dragInput, dragStart, startPos
+    header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = frame.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then dragging = false end end)
+        end
+    end)
+    header.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then dragInput = input end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            local delta = input.Position - dragStart
+            frame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+        end
+    end)
+
+    -- Кнопочная зона (scrollable)
+    local buttonArea = Instance.new("Frame", frame)
+    buttonArea.Name = "ButtonArea"
+    buttonArea.Position = UDim2.new(0, 0, 0, 54)
+    buttonArea.Size = UDim2.new(1, 0, 1, -54)
+    buttonArea.BackgroundTransparency = 1
+    buttonArea.ZIndex = 3
+
+    local layout = Instance.new("UIListLayout", buttonArea)
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.Padding = UDim.new(0,14)
 
     frame.Buttons = {}
 
-    function frame:AddButton(btnText, callback)
-        local btn = Instance.new("TextButton", self)
-        btn.Size = UDim2.new(1, -20, 0, 40)
-        btn.Position = UDim2.new(0, 10, 0, 40 + (#self.Buttons * 50))
-        btn.BackgroundColor3 = Color3.fromRGB(70,70,70)
-        btn.TextColor3 = Color3.fromRGB(255,255,255)
-        btn.Text = btnText
-        btn.Font = Enum.Font.GothamBold
-        btn.TextSize = 18
-        btn.AutoButtonColor = true
-        btn.Visible = true
+    function frame:AddButton(text, callback)
+        local btn = Instance.new("TextButton", buttonArea)
+        btn.Size = UDim2.new(0.92, 0, 0, 44)
+        btn.BackgroundColor3 = Color3.fromRGB(44, 52, 70)
+        btn.AutoButtonColor = false
+        btn.Text = text
+        btn.Font = Enum.Font.GothamSemibold
+        btn.TextColor3 = Color3.fromRGB(230,235,243)
+        btn.TextSize = 19
+        btn.ZIndex = 4
+        btn.LayoutOrder = #frame.Buttons + 1
 
-        -- Скругление углов
-        local corner = Instance.new("UICorner", btn)
-        corner.CornerRadius = UDim.new(0, 8)
+        local uic = Instance.new("UICorner", btn)
+        uic.CornerRadius = UDim.new(0, 12)
+        local uistroke = Instance.new("UIStroke", btn)
+        uistroke.Color = Color3.fromRGB(37,42,65)
+        uistroke.Thickness = 1.1
+        uistroke.Transparency = 0.48
 
-        -- Безопасный callback
-        btn.MouseButton1Click:Connect(function()
-            if callback then
-                local player = game.Players.LocalPlayer
-                local character = player.Character or player.CharacterAdded:Wait()
-                local humanoid = character:WaitForChild("Humanoid")
-                callback(humanoid)
-            end
+        local shadow = make_shadow(btn, 4)
+        shadow.ZIndex = btn.ZIndex - 1
+
+        -- Hover эффект
+        btn.MouseEnter:Connect(function()
+            btn.BackgroundColor3 = Color3.fromRGB(54, 58, 92)
+            btn.TextColor3 = Color3.fromRGB(245, 245, 255)
+        end)
+        btn.MouseLeave:Connect(function()
+            btn.BackgroundColor3 = Color3.fromRGB(44, 52, 70)
+            btn.TextColor3 = Color3.fromRGB(230,235,243)
         end)
 
-        table.insert(self.Buttons, btn)
+        btn.MouseButton1Click:Connect(function()
+            if callback then callback() end
+        end)
+        table.insert(frame.Buttons, btn)
     end
 
     return frame
