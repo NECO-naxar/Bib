@@ -23,7 +23,7 @@ function SimpleGUI:CreateWindow(title, sizeX, sizeY)
     -- Main window (frame)
     local frame = Instance.new("Frame")
     frame.Size = UDim2.new(0, sizeX or 340, 0, sizeY or 440)
-    frame.Position = UDim2.new(0.5, -((sizeX or 340) / 2), 0.47, -((sizeY or 440) / 2))
+    frame.Position = UDim2.new(0.5, -((sizeX or 340) / 2), 0.5, -((sizeY or 440) / 2))
     frame.AnchorPoint = Vector2.new(0,0)
     frame.BackgroundColor3 = Color3.fromRGB(26, 27, 32)
     frame.BorderSizePixel = 0
@@ -79,17 +79,31 @@ function SimpleGUI:CreateWindow(title, sizeX, sizeY)
     end)
 
     -- Кнопочная зона (scrollable)
-    local buttonArea = Instance.new("Frame", frame)
+    local buttonArea = Instance.new("ScrollingFrame", frame)
     buttonArea.Name = "ButtonArea"
-    buttonArea.Position = UDim2.new(0, 0, 0, 54)
-    buttonArea.Size = UDim2.new(1, 0, 1, -54)
+    buttonArea.Position = UDim2.new(0, 0, 0, 48)
+    buttonArea.Size = UDim2.new(1, 0, 1, -48)
     buttonArea.BackgroundTransparency = 1
+    buttonArea.BorderSizePixel = 0
     buttonArea.ZIndex = 3
+    buttonArea.ScrollBarThickness = 6
+    buttonArea.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+    buttonArea.ScrollingDirection = Enum.ScrollingDirection.Y
 
     local layout = Instance.new("UIListLayout", buttonArea)
     layout.HorizontalAlignment = Enum.HorizontalAlignment.Center
     layout.SortOrder = Enum.SortOrder.LayoutOrder
     layout.Padding = UDim.new(0,14)
+
+    local function updateCanvas()
+        buttonArea.CanvasSize = UDim2.new(0, 0, 0, layout.AbsoluteContentSize.Y + 20)
+    end
+    layout:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(updateCanvas)
+    updateCanvas()
+
+    local uipadding = Instance.new("UIPadding", buttonArea)
+    uipadding.PaddingTop = UDim.new(0, 10)
+    uipadding.PaddingBottom = UDim.new(0, 10)
 
     frame.Buttons = {}
 
@@ -129,6 +143,7 @@ function SimpleGUI:CreateWindow(title, sizeX, sizeY)
             if callback then callback() end
         end)
         table.insert(frame.Buttons, btn)
+        updateCanvas()
     end
 
     return frame
