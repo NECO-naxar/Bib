@@ -16,27 +16,53 @@ end
 
 -- Добавление раздела
 function GUI:AddSection(name)
-    local sectionFrame = Instance.new("Frame")
-    sectionFrame.Size = UDim2.new(0, 300, 0, 400)
-    sectionFrame.Position = UDim2.new(0.1, 0, 0.1, 0)
-    sectionFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-    sectionFrame.Parent = self.Menu
-
-    local sectionLabel = Instance.new("TextLabel")
-    sectionLabel.Size = UDim2.new(1,0,0,50)
-    sectionLabel.Text = name
-    sectionLabel.TextScaled = true
-    sectionLabel.BackgroundColor3 = Color3.fromRGB(70,70,70)
-    sectionLabel.Parent = sectionFrame
+    local sectionButton = Instance.new("TextButton")
+    sectionButton.Size = UDim2.new(1, 0, 0, 50)
+    sectionButton.Text = name
+    sectionButton.TextScaled = true
+    sectionButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    sectionButton.Parent = self.SectionsList
 
     local section = {
-        Frame = sectionFrame,
-        Buttons = {}
+        Name = name,
+        Buttons = {},
+        ButtonFrame = self.ContentArea
     }
 
+    sectionButton.MouseButton1Click:Connect(function()
+        self.CurrentSection = section
+        self:RefreshContent()
+    end)
+
     table.insert(self.Sections, section)
+
+    -- Если это первый раздел, сразу открываем его
+    if #self.Sections == 1 then
+        self.CurrentSection = section
+        self:RefreshContent()
+    end
+
     return section
 end
+
+-- Обновление контента
+function GUI:RefreshContent()
+    -- Убираем все старые элементы
+    for _, child in ipairs(self.ContentArea:GetChildren()) do
+        if child:IsA("TextButton") or child:IsA("TextBox") or child:IsA("TextLabel") then
+            child:Destroy()
+        end
+    end
+
+    if not self.CurrentSection then return end
+
+    local buttons = self.CurrentSection.Buttons
+    for i, btn in ipairs(buttons) do
+        btn.Parent = self.ContentArea
+        btn.Position = UDim2.new(0, 10, 0, 10 + (i-1)*60)
+    end
+end
+
 
 -- Обычная кнопка
 function GUI:AddButton(section, name, callback)
