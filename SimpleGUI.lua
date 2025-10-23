@@ -1,4 +1,4 @@
--- SimpleGUI Library
+-- SimpleGUI Library (with fix for slider value label position)
 
 local SimpleGUI = {}
 SimpleGUI.__index = SimpleGUI
@@ -261,7 +261,7 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     label.Parent = sliderFrame
     
     local track = Instance.new("Frame")
-    track.Size = UDim2.new(1, 0, 0, 10)
+    track.Size = UDim2.new(1, -60, 0, 10)  -- Reduced width to make space for value label inside
     track.Position = UDim2.new(0, 0, 0, 25)
     track.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
     local trackCorner = Instance.new("UICorner")
@@ -289,11 +289,11 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     
     local valueLabel = Instance.new("TextLabel")
     valueLabel.Size = UDim2.new(0, 50, 0, 20)
-    valueLabel.Position = UDim2.new(1, 5, 0, -5)
+    valueLabel.Position = UDim2.new(1, 10, 0, -5)  -- Positioned to the right of the track
     valueLabel.BackgroundTransparency = 1
     valueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     valueLabel.TextSize = 12
-    valueLabel.Parent = track
+    valueLabel.Parent = sliderFrame  -- Parent to sliderFrame to avoid clipping issues
     
     local dragging = false
     
@@ -329,7 +329,6 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     updateValue(track.AbsolutePosition.X + defaultRel * track.AbsoluteSize.X)
     
     -- Fade in
-    sliderFrame.Transparency = 1  -- Note: Frame doesn't have Transparency, so animate children if needed
     TweenService:Create(label, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
     TweenService:Create(track, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
     
