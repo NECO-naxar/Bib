@@ -1,4 +1,4 @@
--- SimpleGUI Library (with fix for slider value label position)
+-- SimpleGUI Library (with fix for slider value label visibility and draggable window)
 
 local SimpleGUI = {}
 SimpleGUI.__index = SimpleGUI
@@ -134,6 +134,43 @@ function SimpleGUI.new(options)
         {TextTransparency = 0}
     ):Play()
     
+    -- Make window draggable via header
+    local dragging = false
+    local dragInput
+    local dragStart
+    local startPos
+
+    local function update(input)
+        local delta = input.Position - dragStart
+        self.mainFrame.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+    end
+
+    self.header.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            dragStart = input.Position
+            startPos = self.mainFrame.Position
+
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then
+                    dragging = false
+                end
+            end)
+        end
+    end)
+
+    self.header.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            dragInput = input
+        end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == dragInput and dragging then
+            update(input)
+        end
+    end)
+    
     return self
 end
 
@@ -258,16 +295,23 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     label.TextColor3 = Color3.fromRGB(255, 255, 255)
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
+    label.TextTransparency = 1
     label.Parent = sliderFrame
     
+    local trackFrame = Instance.new("Frame")
+    trackFrame.Size = UDim2.new(1, 0, 0, 30)
+    trackFrame.Position = UDim2.new(0, 0, 0, 20)
+    trackFrame.BackgroundTransparency = 1
+    trackFrame.Parent = sliderFrame
+    
     local track = Instance.new("Frame")
-    track.Size = UDim2.new(1, -60, 0, 10)  -- Reduced width to make space for value label inside
-    track.Position = UDim2.new(0, 0, 0, 25)
+    track.Size = UDim2.new(1, -60, 1, 0)
+    track.Position = UDim2.new(0, 0, 0.5, -5)
     track.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
     local trackCorner = Instance.new("UICorner")
     trackCorner.CornerRadius = UDim.new(0, 5)
     trackCorner.Parent = track
-    track.Parent = sliderFrame
+    track.Parent = trackFrame
     
     local fill = Instance.new("Frame")
     fill.Size = UDim2.new(0, 0, 1, 0)
@@ -278,8 +322,9 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     fill.Parent = track
     
     local knob = Instance.new("TextButton")
-    knob.Size = UDim2.new(0, 20, 0, 20)
-    knob.Position = UDim2.new(0, 0, 0, -5)
+    knob.Size = UDim2.new(0, 20, 2, 0)
+    knob.AnchorPoint = Vector2.new(0.5, 0.5)
+    knob.Position = UDim2.new(0, 0, 0.5, 0)
     knob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
     knob.Text = ""
     local knobCorner = Instance.new("UICorner")
@@ -288,12 +333,14 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     knob.Parent = track
     
     local valueLabel = Instance.new("TextLabel")
-    valueLabel.Size = UDim2.new(0, 50, 0, 20)
-    valueLabel.Position = UDim2.new(1, 10, 0, -5)  -- Positioned to the right of the track
+    valueLabel.Size = UDim2.new(0, 50, 1, 0)
+    valueLabel.Position = UDim2.new(1, 10, 0, 0)
     valueLabel.BackgroundTransparency = 1
     valueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
     valueLabel.TextSize = 12
-    valueLabel.Parent = sliderFrame  -- Parent to sliderFrame to avoid clipping issues
+    valueLabel.TextTransparency = 1
+    valueLabel.TextXAlignment = Enum.TextXAlignment.Left
+    valueLabel.Parent = trackFrame
     
     local dragging = false
     
@@ -302,7 +349,7 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
         local value = minVal + (maxVal - minVal) * relative
         value = math.round(value)
         fill.Size = UDim2.new(relative, 0, 1, 0)
-        knob.Position = UDim2.new(relative, -10, 0, -5)
+        knob.Position = UDim2.new(relative, 0, 0.5, 0)
         valueLabel.Text = tostring(value)
         callback(value)
     end
@@ -331,6 +378,7 @@ function SimpleGUI:AddSlider(section, name, minVal, maxVal, defaultVal, callback
     -- Fade in
     TweenService:Create(label, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
     TweenService:Create(track, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(valueLabel, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
     
     return sliderFrame
 end
@@ -344,11 +392,10 @@ function SimpleGUI:AddLabel(section, text, color)
     label.Text = text
     label.Font = Enum.Font.Gotham
     label.TextSize = 14
-    label.TextTransparency = 0
+    label.TextTransparency = 1
     label.Parent = section:FindFirstChildOfClass("ScrollingFrame") or section
     
     -- Fade in
-    label.TextTransparency = 1
     TweenService:Create(label, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
     
     return label
