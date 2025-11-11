@@ -1,4 +1,3 @@
-```
 -- SimpleGUI Library
 
 local SimpleGUI = {}
@@ -469,4 +468,3 @@ function SimpleGUI:AddToggle(section, name, defaultState, callback)
 end
 
 return SimpleGUI
-```
