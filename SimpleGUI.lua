@@ -1,3 +1,4 @@
+```
 -- SimpleGUI Library
 
 local SimpleGUI = {}
@@ -392,4 +393,80 @@ function SimpleGUI:AddLabel(section, text, color)
     return label
 end
 
+-- Method to add a toggle to a section
+function SimpleGUI:AddToggle(section, name, defaultState, callback)
+    local toggleFrame = Instance.new("Frame")
+    toggleFrame.Size = UDim2.new(1, -20, 0, 30)
+    toggleFrame.BackgroundTransparency = 1
+    toggleFrame.Parent = section:FindFirstChildOfClass("ScrollingFrame") or section
+    
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, -60, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = name
+    label.TextColor3 = Color3.fromRGB(255, 255, 255)
+    label.Font = Enum.Font.Gotham
+    label.TextSize = 14
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextTransparency = 1
+    label.Parent = toggleFrame
+    
+    local switchFrame = Instance.new("Frame")
+    switchFrame.Size = UDim2.new(0, 50, 0, 20)
+    switchFrame.Position = UDim2.new(1, -50, 0.5, -10)
+    switchFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 65)
+    switchFrame.BackgroundTransparency = 1
+    local switchCorner = Instance.new("UICorner")
+    switchCorner.CornerRadius = UDim.new(0, 10)
+    switchCorner.Parent = switchFrame
+    switchFrame.Parent = toggleFrame
+    
+    local knob = Instance.new("Frame")
+    knob.Size = UDim2.new(0, 20, 0, 20)
+    knob.Position = UDim2.new(0, 0, 0, 0)
+    knob.BackgroundColor3 = Color3.fromRGB(200, 200, 200)
+    knob.BackgroundTransparency = 1
+    local knobCorner = Instance.new("UICorner")
+    knobCorner.CornerRadius = UDim.new(0, 10)
+    knobCorner.Parent = knob
+    knob.Parent = switchFrame
+    
+    local state = defaultState or false
+    
+    local offPos = UDim2.new(0, 0, 0, 0)
+    local onPos = UDim2.new(0, 30, 0, 0)  -- 50 - 20 = 30
+    
+    local function updateVisual()
+        local targetPos = state and onPos or offPos
+        local targetColor = state and Color3.fromRGB(100, 140, 220) or Color3.fromRGB(60, 60, 65)
+        
+        TweenService:Create(knob, TweenInfo.new(0.2), {Position = targetPos}):Play()
+        TweenService:Create(switchFrame, TweenInfo.new(0.2), {BackgroundColor3 = targetColor}):Play()
+    end
+    
+    updateVisual()
+    
+    local toggleButton = Instance.new("TextButton")
+    toggleButton.Size = UDim2.new(1, 0, 1, 0)
+    toggleButton.BackgroundTransparency = 1
+    toggleButton.Text = ""
+    toggleButton.Parent = switchFrame
+    
+    toggleButton.MouseButton1Click:Connect(function()
+        state = not state
+        updateVisual()
+        if callback then
+            callback(state)
+        end
+    end)
+    
+    -- Fade in
+    TweenService:Create(label, TweenInfo.new(0.5), {TextTransparency = 0}):Play()
+    TweenService:Create(switchFrame, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+    TweenService:Create(knob, TweenInfo.new(0.5), {BackgroundTransparency = 0}):Play()
+    
+    return toggleFrame
+end
+
 return SimpleGUI
+```
